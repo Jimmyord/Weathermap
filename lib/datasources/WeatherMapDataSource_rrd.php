@@ -584,6 +584,11 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
                     if ($rrdbase != '') {
                         $rrdfile = $rrdbase . "/" . $rrdfile_tmp;
                     }
+                    // If RRDCACHED use TCP socket, strip Path to file
+                    if (preg_match("/^.*:[0-9]+$/", $map->daemon_args)) {
+                        preg_match("/^(.*\/)?.*\/.*\.rrd$/", $rrdfile_tmp, $matches);
+                        $rrdfile = $matches[0];
+                    }
                 } else{
                     $rrdfile = $rrdfile_tmp;
                 }
@@ -633,7 +638,7 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 			{
 				wm_debug("poller_output didn't get anything useful. Kicking it old skool.\n");
 			}
-			if(file_exists($rrdfile))
+			if(file_exists($rrdfile) or preg_match("/^.*:[0-9]+$/", $map->daemon_args))
 			{
 				wm_debug ("RRD ReadData: Target DS names are ".$dsnames[IN]." and ".$dsnames[OUT]."\n");
 
