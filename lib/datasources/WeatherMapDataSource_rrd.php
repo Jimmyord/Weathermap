@@ -75,7 +75,7 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 
 		if(isset($config))
 		{
-		    $pdo = weathermap_get_pdo();
+			$pdo = weathermap_get_pdo();
 
 			// take away the cacti bit, to get the appropriate path for the table
 			// $db_rrdname = realpath($rrdfile);
@@ -95,14 +95,14 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 //					$SQLcheck = "select data_template_data.local_data_id from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path='".mysql_real_escape_string($db_rrdname)."' and data_template_rrd.data_source_name='".mysql_real_escape_string($dsnames[$dir])."'";
 //					$SQLvalid = "select data_template_rrd.data_source_name from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path='".mysql_real_escape_string($db_rrdname)."'";
 
-                    $statement_check = $pdo->prepare("select data_template_data.local_data_id from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path=? and data_template_rrd.data_source_name=?");
-                    $statement_valid = $pdo->prepare("select data_template_rrd.data_source_name from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path=?");
-                    $statement_search = $pdo->prepare("select * from weathermap_data where rrdfile=? and data_source_name=?");
+					$statement_check = $pdo->prepare("select data_template_data.local_data_id from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path=? and data_template_rrd.data_source_name=?");
+					$statement_valid = $pdo->prepare("select data_template_rrd.data_source_name from data_template_data,data_template_rrd where data_template_data.local_data_id=data_template_rrd.local_data_id and data_template_data.data_source_path=?");
+					$statement_search = $pdo->prepare("select * from weathermap_data where rrdfile=? and data_source_name=?");
 
-                    $statement_search->execute(array($db_rrdname, $dsnames[$dir]));
-                    $result = $statement_search->fetch(PDO::FETCH_ASSOC);
+					$statement_search->execute(array($db_rrdname, $dsnames[$dir]));
+					$result = $statement_search->fetch(PDO::FETCH_ASSOC);
 
-                    $worst_time = time() - 8*60;
+					$worst_time = time() - 8*60;
 //					$result = db_fetch_row($SQL);
 
 					// OK, the straightforward query for data failed, let's work out why, and add the new data source if necessary
@@ -110,15 +110,15 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 					{
 						wm_debug("RRD ReadData: poller_output - Adding new weathermap_data row for $db_rrdname:".$dsnames[$dir]."\n");
 
-                        $statement_check->execute(array($db_rrdname,$dsnames[$dir]));
-                        $result = $statement_check->fetch(PDO::FETCH_ASSOC);
+						$statement_check->execute(array($db_rrdname,$dsnames[$dir]));
+						$result = $statement_check->fetch(PDO::FETCH_ASSOC);
 //						$result = db_fetch_row($SQLcheck);
 						if(!isset($result['local_data_id']))
 						{
 							$fields = array();
 
-                            $statement_valid->execute(array($db_rrdname));
-                            $results = $statement_valid->fetchAll(PDO::FETCH_ASSOC);
+							$statement_valid->execute(array($db_rrdname));
+							$results = $statement_valid->fetchAll(PDO::FETCH_ASSOC);
 //                            $results = db_fetch_assoc($SQLvalid);
 							foreach ($results as $result)
 							{
@@ -138,9 +138,9 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 							// add the new data source (which we just checked exists) to the table.
 							// Include the local_data_id as well, to make life easier in poller_output
 							// (and to allow the cacti: DS plugin to use the same table, too)
-                            wm_debug("RRD ReadData: poller_output - Adding new weathermap_data row for data source ID " . $result['local_data_id'] . "\n");
-                            $statement_insert = $pdo->prepare("INSERT INTO weathermap_data (rrdfile, data_source_name, sequence, local_data_id) VALUES (?,?, 0,?)");
-                            $statement_insert->execute(array($db_rrdname, $dsnames[$dir], $result['local_data_id']));
+							wm_debug("RRD ReadData: poller_output - Adding new weathermap_data row for data source ID " . $result['local_data_id'] . "\n");
+							$statement_insert = $pdo->prepare("INSERT INTO weathermap_data (rrdfile, data_source_name, sequence, local_data_id) VALUES (?,?, 0,?)");
+							$statement_insert->execute(array($db_rrdname, $dsnames[$dir], $result['local_data_id']));
 
 //							$SQLins = "insert into weathermap_data (rrdfile, data_source_name, sequence, local_data_id) values ('".mysql_real_escape_string($db_rrdname)."','".mysql_real_escape_string($dsnames[$dir])."', 0,".$result['local_data_id'].")";
 //							db_execute($SQLins);
@@ -166,16 +166,16 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 						$ldi = 0;
 						if(!isset($result['local_data_id']) || $result['local_data_id']==0)
 						{
-                            $statement_check->execute(array($db_rrdname,$dsnames[$dir]));
-                            $r2 = $statement_check->fetch(PDO::FETCH_ASSOC);
+							$statement_check->execute(array($db_rrdname,$dsnames[$dir]));
+							$r2 = $statement_check->fetch(PDO::FETCH_ASSOC);
 //							$r2 = db_fetch_row($SQLcheck);
 							if(isset($r2['local_data_id']))
 							{
 								$ldi = $r2['local_data_id'];
 								wm_debug("RRD ReadData: updated  local_data_id for wmdata.id=" . $result['id'] . "to $ldi\n");
 								// put that in now, so that we can skip this step next time
-                                $statement_update = $pdo->prepare("update weathermap_data set local_data_id=? where id=?");
-                                $statement_update->execute(array($r2['local_data_id'], $result['id']));
+								$statement_update = $pdo->prepare("update weathermap_data set local_data_id=? where id=?");
+								$statement_update->execute(array($r2['local_data_id'], $result['id']));
 
 //								db_execute("update weathermap_data set local_data_id=".$r2['local_data_id']." where id=".$result['id']);
 
@@ -312,15 +312,15 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 			while (!feof($pipe))
 			{
 				$line=fgets($pipe, 4096);
-                // there might (pre-1.5) or might not (1.5+) be a leading blank line
-                // we don't want to count it if there is
-                if (trim($line) != "") {
+				// there might (pre-1.5) or might not (1.5+) be a leading blank line
+				// we don't want to count it if there is
+				if (trim($line) != "") {
 
-                    wm_debug("> " . $line);
-                    $buffer .= $line;
-                    $lines[] = $line;
-                    $linecount++;
-                }
+					wm_debug("> " . $line);
+					$buffer .= $line;
+					$lines[] = $line;
+					$linecount++;
+				}
 			}
 			pclose ($pipe);
 			if($linecount>1)
@@ -348,11 +348,48 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 		}
 		else
 		{
-		    $error = error_get_last();
+			$error = error_get_last();
 			wm_warn("RRD ReadData: failed to open pipe to RRDTool: ". $error['message']." [WMRRD04]\n");
 		}
 		wm_debug ("RRD ReadDataFromRealRRDAggregate: Returning (".($data[IN]===NULL?'NULL':$data[IN]).",".($data[OUT]===NULL?'NULL':$data[OUT]).",$data_time)\n");
 
+	}
+
+	function check_rrdcached_file($rrdfile, $map)
+	// Return false if rrd file exist (No access to file with rrdcached using TCP socket)
+	{
+			wm_debug("RRD : Check File Info\n");
+
+			$extra_options = $map->get_hint("rrd_options");
+			$args = array();
+			#### $command = '"'.$map->rrdtool . '" info "'.$rrdfile.'";
+			#$command=$map->rrdtool . " info $rrdfile $extra_options";
+			$args[] = "info";
+			$args[] = $rrdfile;
+			// rrdcached Support: Use daemon
+			if ($map->daemon)
+			{
+					$args[] = "--daemon";
+					$args[] = $map->daemon_args;
+			}
+			$command = $map->rrdtool;
+			foreach ($args as $arg)
+			{
+					if(strchr($arg," ") != FALSE)
+					{
+							$command .= ' "' . $arg . '"';
+					}
+					else
+					{
+							$command .= ' ' . $arg;
+					}
+			}
+			$command .= " " . $extra_options;
+
+			wm_debug ("RRD Check File Info : Running: $command\n");
+			exec($command, $output, $retval);
+			return boolval($retval);
+			wm_debug ("RRD Check File Info : Return: $retval\n");
 	}
 
 	function wmrrd_read_from_real_rrdtool($rrdfile,$cf,$start,$end,$dsnames, &$data, &$map, &$data_time,&$item)
@@ -424,14 +461,14 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 			while (!feof($pipe))
 			{
 				$line=fgets($pipe, 4096);
-                // there might (pre-1.5) or might not (1.5+) be a leading blank line
-                // we don't want to count it if there is
-                if (trim($line) != "") {
-                    wm_debug("> " . $line);
-                    $buffer .= $line;
-                    $lines[] = $line;
-                    $linecount++;
-                }
+				// there might (pre-1.5) or might not (1.5+) be a leading blank line
+				// we don't want to count it if there is
+				if (trim($line) != "") {
+					wm_debug("> " . $line);
+					$buffer .= $line;
+					$lines[] = $line;
+					$linecount++;
+				}
 
 			}
 			pclose ($pipe);
@@ -441,10 +478,10 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 
 			if( (in_array($dsnames[IN],$heads) || $dsnames[IN] == '-') && (in_array($dsnames[OUT],$heads) || $dsnames[OUT] == '-') )
 			{
-			    // deal with the data, starting with the last line of output
-			     $rlines=array_reverse($lines);
+				// deal with the data, starting with the last line of output
+				 $rlines=array_reverse($lines);
 
-			     foreach ($rlines as $line)
+				 foreach ($rlines as $line)
 				 {
 					 wm_debug ("--" . $line . "\n");
 					 $cols=preg_split("/\s+/", $line);
@@ -486,21 +523,21 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 						// break out of the loop here
 						break;
 					}
-			     }
+				 }
 			}
 			else
 			{
-			    // report DS name error
-			    $names = join(",",$heads);
-			    $names = str_replace("timestamp,","",$names);
-			    wm_warn("RRD ReadData: At least one of your DS names (".$dsnames[IN]." and ".$dsnames[OUT].") were not found, even though there was a valid data line. Maybe they are wrong? Valid DS names in this file are: $names [WMRRD06]\n");
+				// report DS name error
+				$names = join(",",$heads);
+				$names = str_replace("timestamp,","",$names);
+				wm_warn("RRD ReadData: At least one of your DS names (".$dsnames[IN]." and ".$dsnames[OUT].") were not found, even though there was a valid data line. Maybe they are wrong? Valid DS names in this file are: $names [WMRRD06]\n");
 			}
 
 		}
 		else
 		{
-            $error = error_get_last();
-            wm_warn("RRD ReadData: failed to open pipe to RRDTool: ". $error['message']." [WMRRD04]\n");
+			$error = error_get_last();
+			wm_warn("RRD ReadData: failed to open pipe to RRDTool: ". $error['message']." [WMRRD04]\n");
 		}
 		wm_debug ("RRD ReadDataFromRealRRD: Returning (".($data[IN]===NULL?'NULL':$data[IN]).",".($data[OUT]===NULL?'NULL':$data[OUT]).",$data_time)\n");
 	}
@@ -567,33 +604,33 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 
 		// try and make a complete path, if we've been given a clue
 		// (if the path starts with a . or a / then assume the user knows what they are doing)
-        // Check for the cases where there is an accidental . in the target
-        if(!preg_match("/^(\/)/",$rrdfile)){
-		    $fileExist = file_exists($rrdfile);
-            if (!$fileExist) {
-                $rrdfile_tmp = $rrdfile;
-                if(preg_match("/^(\.)/",$rrdfile)){
-                    $rrdfile_tmp = substr($rrdfile, 1);
-                    if(preg_match("/^(\/)/",$rrdfile_tmp)){
-                        $rrdfile_tmp = substr($rrdfile_tmp, 1);
-                    }
-                }
-                $fileExist = file_exists($rrdfile_tmp);
-                if(!$fileExist) {
-                    $rrdbase = $map->get_hint('rrd_default_path');
-                    if ($rrdbase != '') {
-                        $rrdfile = $rrdbase . "/" . $rrdfile_tmp;
-                    }
-                    // If RRDCACHED use TCP socket, strip Path to file
-                    if (preg_match("/^.*:[0-9]+$/", $map->daemon_args)) {
-                        preg_match("/^(.*\/)?.*\/.*\.rrd$/", $rrdfile_tmp, $matches);
-                        $rrdfile = $matches[0];
-                    }
-                } else{
-                    $rrdfile = $rrdfile_tmp;
-                }
-            }
-        }
+		// Check for the cases where there is an accidental . in the target
+		if(!preg_match("/^(\/)/",$rrdfile)){
+			$fileExist = file_exists($rrdfile);
+			if (!$fileExist) {
+				$rrdfile_tmp = $rrdfile;
+				if(preg_match("/^(\.)/",$rrdfile)){
+					$rrdfile_tmp = substr($rrdfile, 1);
+					if(preg_match("/^(\/)/",$rrdfile_tmp)){
+						$rrdfile_tmp = substr($rrdfile_tmp, 1);
+					}
+				}
+				$fileExist = file_exists($rrdfile_tmp);
+				if(!$fileExist) {
+					$rrdbase = $map->get_hint('rrd_default_path');
+					if ($rrdbase != '') {
+						$rrdfile = $rrdbase . "/" . $rrdfile_tmp;
+					}
+					// If RRDCACHED use TCP socket, strip Path to file
+					if (preg_match("/^.*:[0-9]+$/", $map->daemon_args)) {
+						preg_match("/^(.*\/)?.*\/.*\.rrd$/", $rrdfile_tmp, $matches);
+						$rrdfile = $matches[0];
+					}
+				} else{
+					$rrdfile = $rrdfile_tmp;
+				}
+			}
+		}
 
 		$cfname = $map->get_hint('rrd_cf');
 		if($cfname=='') $cfname='AVERAGE';
@@ -602,12 +639,12 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 		if($period == 0) $period = 800;
 		$start = $map->get_hint('rrd_start');
 		if($start == '') {
-		    $start = "now-$period";
-		    $end = "now";
+			$start = "now-$period";
+			$end = "now";
 		}
 		else
 		{
-		    $end = "start+".$period;
+			$end = "start+".$period;
 		}
 
 		$use_poller_output = intval($map->get_hint('rrd_use_poller_output'));
@@ -638,7 +675,7 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 			{
 				wm_debug("poller_output didn't get anything useful. Kicking it old skool.\n");
 			}
-			if(file_exists($rrdfile) or preg_match("/^.*:[0-9]+$/", $map->daemon_args))
+			if(file_exists($rrdfile) or ! WeatherMapDataSource_rrd::check_rrdcached_file($rrdfile, $map))
 			{
 				wm_debug ("RRD ReadData: Target DS names are ".$dsnames[IN]." and ".$dsnames[OUT]."\n");
 
@@ -667,20 +704,20 @@ class WeatherMapDataSource_rrd extends WeatherMapDataSource {
 			}
 		}
 
-                // if the Locale says that , is the decimal point, then rrdtool
-                // will honour it. However, floatval() doesn't, so let's replace
-                // any , with . (there are never thousands separators, luckily)
-                //
+				// if the Locale says that , is the decimal point, then rrdtool
+				// will honour it. However, floatval() doesn't, so let's replace
+				// any , with . (there are never thousands separators, luckily)
+				//
 		if($data[IN] !== NULL)
-                {
-                    $data[IN] = floatval(str_replace(",",".",$data[IN]));
-                    $data[IN] = $data[IN] * $multiplier;
-                }
+				{
+					$data[IN] = floatval(str_replace(",",".",$data[IN]));
+					$data[IN] = $data[IN] * $multiplier;
+				}
 		if($data[OUT] !== NULL)
-                {
-                    $data[OUT] = floatval(str_replace(",",".",$data[OUT]));
-                    $data[OUT] = $data[OUT] * $multiplier;
-                }
+				{
+					$data[OUT] = floatval(str_replace(",",".",$data[OUT]));
+					$data[OUT] = $data[OUT] * $multiplier;
+				}
 
 		wm_debug ("RRD ReadData: Returning (".($data[IN]===NULL?'NULL':$data[IN]).",".($data[OUT]===NULL?'NULL':$data[OUT]).",$data_time)\n");
 
